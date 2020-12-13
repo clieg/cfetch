@@ -130,7 +130,7 @@ void init() {
  *   \x1b[36m - Cyan
  *   \x1b[37m - White
  */
-int main() {
+int main(int argc, char *argv[]) {
     init();
 
     // Do not change these
