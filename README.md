@@ -50,7 +50,7 @@ If there is some incorrect system information shown in ```coffeetch```, open an 
 Copyright (c) 2020 [Clint](https://github.com/clieg)
 
 ## License
-This program is provided under the [GPL-3.0 License](https://github.com/clieg/coffeetch/blob/master/LICENSE). See [LICENSE](https://github.com/clieg/coffeetch/blob/master/LICENSE) for more details.
+This programme is provided under the [GPL-3.0 License](https://github.com/clieg/coffeetch/blob/master/LICENSE). See [LICENSE](https://github.com/clieg/coffeetch/blob/master/LICENSE) for more details.
 
 
 ## Credits
