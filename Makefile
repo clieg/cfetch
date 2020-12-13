@@ -1,14 +1,16 @@
-# Check for updates and install GCC compiler.
-gcc:
-	sudo apt update && sudo apt install build-essential
+# Compile coffeetch
+all: src/coffeetch.c
+	gcc src/coffeetch.c -o coffeetch
 
+clean:
+	rm -f coffeetch
 
 # Install coffeetch
+# This will move coffeetch to the /usr/bin directory
 install:
-	gcc src/coffeetch.c -o src/coffeetch && sudo mv src/coffeetch /usr/bin/
-
+	sudo cp coffeetch /usr/bin
 
 # Uninstall coffeetch
 # This will delete coffeetch from the /usr/bin/ directory.
 uninstall:
-	sudo rm coffeetch /usr/bin/coffeetch
+	sudo rm /usr/bin/coffeetch

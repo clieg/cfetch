@@ -20,24 +20,23 @@ If there is some incorrect system information shown in ```coffeetch```, open an 
 <br>
 
 ## Configuration
+
+Your distro may or may not come with a C compiler called **GCC**, which is required to build ```coffeetch```. You can check if you have it by running ```gcc --version``` in a terminal. If it outputs GCC version information, you can skip to installing coffeetch. If not, follow the instructions to install the compiler. 
+
+**If you do not have a compiler**:
+| Steps | Commands |
+|-------|----------|
+| Download compiler (Debian/Ubuntu) | $```sudo apt update && sudo apt install build-essential``` |
+| Download compiler (Arch) | $```sudo pacman -Sy && sudo pacman -S base-devel``` |
+
 **Install:**
 | Steps | Commands |
 |-------|----------|
 | Download coffeetch | $ ```git clone https://github.com/clieg/coffeetch``` |
 | Go to coffeetch directory | $ ```cd coffeetch``` |
-| Install coffeetch | $ ```make install``` |
+| Compile coffeetch | $ ```make``` |
+| Install coffeetch | $```make install``` |
 | Run coffeetch | $ ``` coffeetch ``` |
-
-
-**If you do not have a compiler**:
-| Steps | Commands |
-|-------|----------|
-| Download coffeetch | $ ```git clone https://github.com/clieg/coffeetch``` |
-| Go to coffeetch directory | $ ```cd coffeetch``` |
-| Download compiler | $ ```make gcc``` |
-| Install coffeetch | $ ```make install``` |
-| Run coffeetch | $ ``` coffeetch ``` |
-
 
 **Uninstall:**
 | Steps | Commands |
