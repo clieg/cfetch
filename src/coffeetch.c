@@ -1,14 +1,35 @@
-// coffeetch: a minimal CLI system information tool written in C.
+/*
+ * coffeetch: a minimal CLI system information tool written in C.
+ * Copyright (c) Clint
+ * This programme is provided under the GPL-3.0 License. See LICENSE for more details.
+ */
+
+
+
 
 
 #include <stdio.h>
+
+// Colours and text customisation
+#define reset "\x1b[0m"
+#define bold "\x1b[1m"
+#define black "\x1b[30m"
+#define red "\x1b[31m"
+#define green "\x1b[32m"
+#define yellow "\x1b[33m"
+#define blue "\x1b[34m"
+#define magenta "\x1b[35m"
+#define cyan "\x1b[36m"
+#define white "\x1b[37m"
+
 
 int day, hour, min, sec, ramused, ramtotal, dpkg, flatpak;
 char  user[50], host[50], os[50], model[50], modelversion[25], kernel[50], shell[25], cpu[50];
 
 
-// Get current user
-void getUser() {
+// Detects the current user
+// This will detect the current user and the hostname
+void detectUser() {
     FILE *userName = popen("echo $USER", "r");
     FILE *userHost = popen("cat /proc/sys/kernel/hostname", "r");
 
@@ -18,8 +39,10 @@ void getUser() {
     fclose(userHost);
 }
 
-// Get distro name
-void getDistro() {
+
+// Detects the distro name
+// This will detect the name of the distro
+void detectDistro() {
     FILE *distroName = popen("lsb_release -ds 2>/dev/null", "r");
 
     fscanf(distroName, "%[^\n]s", os);
@@ -27,8 +50,9 @@ void getDistro() {
 }
 
 
-// Get kernel
-void getKernel() {
+// Detects the kernel
+// This will detect the kernel-release, kernel-name, and the hardware machin name
+void detectKernel() {
     FILE *pathKernel = popen("uname -rsm", "r");
 
     fscanf(pathKernel, "%[^\n]s", kernel);
@@ -36,8 +60,9 @@ void getKernel() {
 }
 
 
-// Get model information
-void getModel() {
+// Detects the model information
+// This will detect the computer's product name and the product version
+void detectModel() {
     FILE *productName = fopen("/sys/devices/virtual/dmi/id/product_name", "r");
     FILE *productVersion = fopen("/sys/devices/virtual/dmi/id/product_version", "r");
 
@@ -48,8 +73,8 @@ void getModel() {
 }
 
 
-// Get shell information
-void getShell() {
+// Detects the shell information
+void detectShell() {
     FILE *shellpath = popen("echo $SHELL", "r");
 
     fscanf(shellpath, "%s", shell);
@@ -57,9 +82,9 @@ void getShell() {
 }
 
 
-// Get packages
+// Detects the packages
 // Currently this only displays dpkg and flatpaks
-void getPackages() {
+void detectPackages() {
     FILE *dpkgs = popen("dpkg-query -l | wc -l 2>/dev/null", "r");
     FILE *flatpaks = popen("flatpak list | wc -l 2>/dev/null", "r");
 
@@ -70,10 +95,10 @@ void getPackages() {
 }
 
 
-// Get CPU information
+// Detects the CPU information
 // lscpu | grep 'Model name:' | sed -r 's/Model name:\\s{1,}//
 // sed -r 's/Model name:\\s{1,}// -> This will remove the 'Model name:', only the CPU will be printed.
-void getCPU() {
+void detectCPU() {
     FILE *cpuinfo = popen("lscpu | grep 'Model name:' | sed -r 's/Model name:\\s{1,}//'", "r");
 
     fscanf(cpuinfo, "%[^\n]s", cpu);
@@ -81,8 +106,9 @@ void getCPU() {
 }
 
 
-// Get RAM information
-void getRAM() {
+// Detects the RAM information
+// This will show the used RAM / total RAM
+void detectRAM() {
     FILE *used = popen("vmstat -s -S M | grep ' used memory'", "r");
     FILE *total = popen("vmstat -s -S M | grep ' total memory'", "r");
 
@@ -93,8 +119,9 @@ void getRAM() {
 }
 
 
-// Get uptime information
-void getUptime() {
+// Detects the uptime information
+// This will show how long the computer is running: DDd, HHh, MMm
+void detectUptime() {
     FILE *pathUptime = fopen("/proc/uptime", "r");
 
     fscanf(pathUptime, "%d", &sec);
@@ -107,46 +134,35 @@ void getUptime() {
 
 
 // Call all functions
-void init() {
-    getUser();
-    getDistro();
-    getModel();
-    getKernel();
-    getShell();
-    getPackages();
-    getCPU();
-    getRAM();
-    getUptime();
+// This will call of the functions that detects the system information
+void getSysinfo() {
+    detectUser();
+    detectDistro();
+    detectModel();
+    detectKernel();
+    detectShell();
+    detectPackages();
+    detectCPU();
+    detectRAM();
+    detectUptime();
 }
 
-/*
- *   Colour legend
- *   \x1b[30m - Black
- *   \x1b[31m - Red
- *   \x1b[32m - Green
- *   \x1b[33m - YelloW os:\x
- *   \x1b[34m - Blue
- *   \x1b[35m - Magenta
- *   \x1b[36m - Cyan
- *   \x1b[37m - White
- */
+
 int main() {
-    init();
+    getSysinfo();
 
     // Do not change these
-    // user, os, kernel, model, cpu, ram, shell, pkgs, uptime, pallate colour
-    printf("\n\x1b[1m \x1b[36mcoffeetch\x1b[0m: a minimal CLI system information tool written in C.\n\n");
-    printf("\x1b[1m        ___          \x1b[36muser\x1b[0m:       %s@%s\n", user, host);
-    printf("\x1b[1m       (.· |         \x1b[36mos\x1b[0m:         %s\n", os);
-    printf("\x1b[1m       (<> |         \x1b[36mkernel\x1b[0m:     %s\n", kernel);
-    printf("\x1b[1m      / __  \\        \x1b[36mmodel\x1b[0m:      %s %s\n", model, modelversion);
-    printf("\x1b[1m     ( /  \\ /|       \x1b[36mcpu\x1b[0m:        %s\n", cpu);
-    printf("\x1b[1m    _/\\ __)/_)       \x1b[36mram\x1b[0m:        %dM / %dM\n", ramused, ramtotal);
-    printf("\x1b[1m    \\|/-___\\|/       \x1b[36mshell\x1b[0m:      %s\n", shell);
-    printf("\x1b[1m                     \x1b[36mpkgs\x1b[0m:       %d(dpkg), %d(flatpak)\n", dpkg, flatpak);
-    printf("\x1b[1m\x1b[30m ██\x1b[31m██\x1b[32m██\x1b[33m██\x1b[34m██\x1b[35m██\x1b[36m██\x1b[37m██\x1b[0m    \x1b[1;36muptime\x1b[0m:     %dd, %dh, %dm\n", day, hour, min);
-
-    printf("\n\n\n");
+    // user, os, kernel, model, cpu, ram, shell, pkgs, uptime, pallate colours
+    printf("%s %scoffeetch%s: a minimal CLI system information tool written in C.\n\n", bold, cyan, reset);
+    printf("%s        ___          %suser%s:       %s@%s\n", bold, cyan, reset, user, host);
+    printf("%s       (.· |         %sos%s:         %s\n", bold, cyan, reset, os);
+    printf("%s       (<> |         %skernel%s:     %s\n", bold, cyan, reset, kernel);
+    printf("%s      / __  \\        %smodel%s:      %s %s\n", bold, cyan, reset, model, modelversion);
+    printf("%s     ( /  \\ /|       %scpu%s:        %s\n", bold, cyan, reset, cpu);
+    printf("%s    _/\\ __)/_)       %sram%s:        %dM / %dM\n", bold, cyan, reset, ramused, ramtotal);
+    printf("%s    \\|/-___\\|/       %sshell%s:      %s\n", bold, cyan, reset, shell);
+    printf("%s                     %spkgs%s:       %d(dpkg), %d(flatpak)\n", bold, cyan, reset, dpkg, flatpak);
+    printf("%s %s██%s██%s██%s██%s██%s██%s██%s██%s    %s%suptime%s:     %dd, %dh, %dm\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset, bold, cyan, reset, day, hour, min);
 
     return 0;
 }
