@@ -5,7 +5,6 @@
 
 <p align="center">
   :coffee: coffeetch: a minimal CLI system information tool written in C.<br>
-  <a href="#configuration">Configuration</a> | <a href="#author">Author</a> | <a href="#license">License</a> | <a href="#credits">Credits</a>
 </p>
 
 <img width="50%" height="100%" align="left" src="https://raw.githubusercontent.com/clieg/coffeetch/master/coffeetch.png">
