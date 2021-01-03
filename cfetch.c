@@ -64,10 +64,16 @@ void getkernel() {
 void getmodel() {
     FILE *modelname = fopen("/sys/devices/virtual/dmi/id/product_name", "r");
     FILE *modelversion = fopen("/sys/devices/virtual/dmi/id/product_version", "r");
-    fscanf(modelname, "%[^\n]", sysinfo.modelname);
-    fscanf(modelversion, "%s", sysinfo.modelversion);
-    fclose(modelname);
-    fclose(modelversion);
+    if (0 != modelname) {
+        fscanf(modelname, "%49[^\n]", sysinfo.modelname);
+        fclose(modelname);
+    } else
+        strncpy(sysinfo.modelname,"unavailable\0",12);
+    if (0 != modelversion) {
+        fscanf(modelversion, "%49s", sysinfo.modelversion);
+        fclose(modelversion);
+    } else
+        strncpy(sysinfo.modelversion,"unavailable\0",12);
 }
 
 // Gets the shell information
