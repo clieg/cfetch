@@ -47,7 +47,7 @@ void getuser() {
 // Gets the distro name
 // This will get the name of the distro
 void getos() {
-    FILE *os = popen("if [ $(command -v lsb_release) ];then lsb_release -ds;else cat /etc/*-release | grep 'PRETTY_NAME=' | cut -d '\"' -f2;fi 2>/dev/null", "r");
+    FILE *os = popen("if [ $(command -v lsb_release) ];then lsb_release -ds;else grep -i 'PRETTY_NAME=' /etc/*-release | cut -d '\"' -f2;fi 2>/dev/null", "r");
     fscanf(os, "%[^\n]", sysinfo.os);
     fclose(os);
 }
@@ -210,7 +210,7 @@ void printpkgs(){
 // lscpu | grep 'Model name:' | sed -r 's/Model name:\\s{1,}//
 // sed -r 's/Model name:\\s{1,}// -> This will remove the 'Model name:', only the CPU will be printed.
 void getcpu() {
-    FILE *cpu = popen("lscpu | grep 'Model name:' | sed -r 's/Model name:\\s{1,}//'", "r");
+    FILE *cpu = popen("grep -i 'model name' /proc/cpuinfo | head -1 | cut -f3- -d' '", "r");
     fscanf(cpu, "%[^\n]", sysinfo.cpu);
     fclose(cpu);
 }
@@ -218,10 +218,13 @@ void getcpu() {
 // Gets the RAM information
 // This will show the used RAM / total RAM
 void getram() {
-    FILE *ramused = popen("vmstat -s -S M | grep ' used memory'", "r");
-    FILE *ramtotal = popen("vmstat -s -S M | grep ' total memory'", "r");
+    FILE *ramused = popen("grep -i MemAvailable /proc/meminfo | awk '{print $2}'", "r");
+    FILE *ramtotal = popen("grep -i MemTotal /proc/meminfo | awk '{print $2}'", "r");
     fscanf(ramused, "%d", &sysinfo.ramused);
     fscanf(ramtotal, "%d", &sysinfo.ramtotal);
+    sysinfo.ramused=sysinfo.ramtotal-sysinfo.ramused;
+    sysinfo.ramtotal=sysinfo.ramtotal/1024;
+    sysinfo.ramused=sysinfo.ramused/1024;
     fclose(ramused);
     fclose(ramtotal);
 }
