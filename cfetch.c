@@ -7,9 +7,11 @@
 
 
 
-
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <sys/utsname.h>
 
 // Colours and text customisation
 #define reset "\x1b[0m"
@@ -26,21 +28,20 @@
 
 // System information variables
 struct sysinfo {
-    char username[25], hostname[50], os[50], distro[50], kernel[50], modelname[50], modelversion[50], cpu[50], shell[8];
+    char username[25], hostname[65], os[50], distro[50], kernel[50], modelname[50], modelversion[50], cpu[50], shell[8];
     int ramused, ramtotal;
     int apk, apt, dnf, emerge, flatpak, kiss, nix, pacman, rpm, snap, xbps, yay, yum, zypper;
     int day, hour, min, sec;
 } sysinfo;
 
+
 // Gets the current user
 // This will get the current user and the hostname
 void getuser() {
-    FILE *username = popen("echo $USER", "r");
-    FILE *hostname = popen("cat /proc/sys/kernel/hostname", "r");
-    fscanf(username, "%s", sysinfo.username);
-    fscanf(hostname, "%s", sysinfo.hostname);
-    fclose(username);
-    fclose(hostname);
+    struct utsname hostname;
+    uname(&hostname);
+    snprintf(sysinfo.username, 25, "%s", getenv("USER"));
+    snprintf(sysinfo.hostname, 65, "%s", hostname.nodename);
 }
 
 // Gets the distro name
@@ -54,9 +55,9 @@ void getos() {
 // Gets the kernel
 // This will get the kernel-release, kernel-name, and the hardware machin name
 void getkernel() {
-    FILE *kernel = popen("uname -rsm", "r");
-    fscanf(kernel, "%[^\n]", sysinfo.kernel);
-    fclose(kernel);
+	struct utsname kerninfo;
+	uname(&kerninfo);
+	snprintf(sysinfo.kernel, 195, "%s %s %s", kerninfo.sysname, kerninfo.release, kerninfo.machine);
 }
 
 // Gets the model information
@@ -228,13 +229,29 @@ void getram() {
 // Gets the uptime information
 // This will show how long the computer is running: DDd, HHh, MMm
 void getuptime() {
-    FILE *uptime = fopen("/proc/uptime", "r");
-    fscanf(uptime, "%d", &sysinfo.sec);
-    fclose(uptime);
 
-    sysinfo.day = (sysinfo.sec/60/60/24);
-    sysinfo.hour = (sysinfo.sec/60/60%24);
-    sysinfo.min = (sysinfo.sec/60%60);
+	// CLOCK_UPTIME or CLOCK_BOOTTIME should be defined, so only use /proc/uptime as a last resort
+   #ifdef CLOCK_UPTIME
+	struct timespec si;
+	clock_gettime(CLOCK_UPTIME, &si);
+	sysinfo.day = (si.tv_sec/60/60/24);
+	sysinfo.hour = (si.tv_sec/60/60%24);
+	sysinfo.min = (si.tv_sec/60%60);
+   #elif CLOCK_BOOTTIME
+	struct timespec si;
+	clock_gettime(CLOCK_BOOTTIME, &si);
+	sysinfo.day = (si.tv_sec/60/60/24);
+	sysinfo.hour = (si.tv_sec/60/60%24);
+	sysinfo.min = (si.tv_sec/60%60);
+   #else
+    	FILE *uptime = fopen("/proc/uptime", "r");
+    	fscanf(uptime, "%d", &sysinfo.sec);
+    	fclose(uptime);
+
+    	sysinfo.day = (sysinfo.sec/60/60/24);
+    	sysinfo.hour = (sysinfo.sec/60/60%24);
+    	sysinfo.min = (sysinfo.sec/60%60);
+   #endif
 }
 
 // Call all functions
