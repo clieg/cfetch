@@ -40,4 +40,6 @@ This programme is provided under the [GPL-3.0 License](https://github.com/clieg/
 
 
 ## Credits
+Thanks to cfetch contributors ♥ <https://github.com/clieg/cfetch/graphs/contributors>
+
 [ufetch](https://gitlab.com/jschx/ufetch/): ASCII Distro logos
