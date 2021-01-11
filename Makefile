@@ -10,6 +10,7 @@ compile:
 install:
 	@echo "Installing cfetch..."
 	cp -v cfetch /usr/bin
+	MAN="$(shell manpath|tr ':' '\n'|grep usr|grep share|grep -v local)";cp -v cfetch.1 $$MAN/man1/
 	@echo "Installation finished!"
 
 
@@ -18,6 +19,7 @@ install:
 uninstall:
 	@echo "Uninstalling cfetch..."
 	rm -rf /usr/bin/cfetch
+	MAN="$(shell whereis cfetch|tr ' ' '\n'|grep man)";rm -rf $$MAN
 	@echo "Uninstalling finished!"
 
 
