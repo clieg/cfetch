@@ -5,7 +5,7 @@ A simple system information tool for Linux.
 
 
 ## Currently supported distros
-Alpine Linux, ArchBang, Arch Linux, ArcoLinux Artix Linux, CentOS, Debian, Devuan, elementary OS, Fedora, Gentoo Linux, gNewSense, GNU Guix, Hyperbola GNU/Linux-libre, instantOS, KISS Linux, Linux Lite, Linux Mint, Mageia, Manjaro, MX Linux, NixOS, openSUSE, Parabola GNU/Linux-libre, Pop!_OS, PureOS, Raspbian, Slackware, Ubuntu (and its flavours), Void Linux, and Voyager Live.
+Alpine Linux, ArchBang, ArchLabs, Arch Linux, ArcoLinux Artix Linux, CentOS, Debian, Devuan, elementary OS, Fedora, Gentoo Linux, gNewSense, GNU Guix, Hyperbola GNU/Linux-libre, instantOS, KISS Linux, Linux Lite, Linux Mint, Mageia, Manjaro, MX Linux, NixOS, openSUSE, OpenWrt, Parabola GNU/Linux-libre, Pop!_OS, PureOS, Raspbian, Slackware, Ubuntu (and its flavours), Void Linux, and Voyager Live.
 
 
 ## Configuration
