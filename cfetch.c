@@ -1,6 +1,6 @@
 /*
  * cfetch: A minimal system information tool for Linux-based operating systems.
- * Copyright (c) 2020 Clint
+ * Copyright (c) 2020 - 2021 Clint
  * This programme is provided under the GPL-3.0 License. See LICENSE for more details.
  */
 
@@ -30,7 +30,7 @@
 struct sysinfo {
     char username[25], hostname[65], os[50], distro[50], kernel[50], modelname[50], modelversion[50], cpu[50], shell[8];
     int ramused, ramtotal;
-    int apk, apt, dnf, emerge, flatpak, kiss, nix, pacman, rpm, snap, xbps, yay, yum, zypper;
+    int apk, apt, dnf, emerge, flatpak, kiss, nix, opkg, pacman, rpm, snap, xbps, yay, yum, zypper;
     int day, hour, min, sec;
 } sysinfo;
 
@@ -94,6 +94,7 @@ void getpackages() {
     FILE *flatpak = popen("flatpak list 2>/dev/null | wc -l", "r");
     FILE *kiss = popen("kiss list 2>/dev/null | wc -l", "r");
     FILE *nix = popen("nix-store -q --requisites /run/current-system/sw 2>/dev/null | wc -l", "r");
+    FILE *opkg = popen("opkg list-installed  2>/dev/null | wc -l", "r");
     FILE *pacman = popen("pacman -Q 2>/dev/null | wc -l", "r");
     FILE *rpm = popen("rpm -qa --last 2>/dev/null | wc -l", "r");
     FILE *snap = popen("snap list 2>/dev/null | wc -l", "r");
@@ -109,6 +110,7 @@ void getpackages() {
     fscanf(flatpak, "%d", &sysinfo.flatpak);
     fscanf(kiss, "%d", &sysinfo.kiss);
     fscanf(nix, "%d", &sysinfo.nix);
+    fscanf(opkg, "%d", &sysinfo.opkg);
     fscanf(pacman, "%d", &sysinfo.pacman);
     fscanf(rpm, "%d", &sysinfo.rpm);
     fscanf(snap, "%d", &sysinfo.snap);
@@ -123,6 +125,7 @@ void getpackages() {
     fclose(flatpak);
     fclose(kiss);
     fclose(nix);
+    fclose(opkg);
     fclose(pacman);
     fclose(rpm);
     fclose(snap);
@@ -137,75 +140,77 @@ void printpkgs(){
     int comma=0;
     if (sysinfo.apk != 0) {
         if (comma == 1) printf(", ");
-        printf("apk: %d", sysinfo.apk);
+        printf("%d (apk)", sysinfo.apk);
         comma = 1;
     }
-
     if (sysinfo.apt != 0) {
         if (comma == 1) printf(", ");
-        printf("apt: %d", sysinfo.apt);
+        printf("%d (apt)", sysinfo.apt);
         comma = 1;
     }
     if (sysinfo.dnf != 0) {
         if(comma == 1) printf(", ");
-        printf("dnf: %d", sysinfo.dnf);
+        printf("%d (dnf)", sysinfo.dnf);
         comma = 1;
     }
     if (sysinfo.emerge != 0) {
         if (comma == 1) printf(", ");
-        printf("emerge: %d", sysinfo.emerge);
+        printf("%d (emerge)", sysinfo.emerge);
         comma = 1;
     }
     if (sysinfo.flatpak != 0) {
         if (comma == 1) printf(", ");
-        printf("flatpak: %d", sysinfo.flatpak);
+        printf("%d (flatpak)", sysinfo.flatpak);
         comma = 1;
     }
     if (sysinfo.kiss != 0) {
         if (comma == 1) printf(", ");
-        printf("kiss: %d", sysinfo.kiss);
+        printf("%d (kiss)", sysinfo.kiss);
         comma = 1;
     }
     if (sysinfo.nix != 0) {
         if (comma == 1) printf(", ");
-        printf("nix: %d", sysinfo.nix);
+        printf("%d (nix)", sysinfo.nix);
         comma = 1;
     }
-
+    if (sysinfo.opkg != 0) {
+        if (comma == 1) printf(", ");
+        printf("%d (opkg)", sysinfo.opkg);
+    }
     if (sysinfo.pacman != 0) {
         if (comma == 1) printf(", ");
-        printf("pacman: %d", sysinfo.pacman);
+        printf("%d (pacman)", sysinfo.pacman);
         comma = 1;
     }
     if (sysinfo.rpm != 0) {
         if (comma == 1) printf(", ");
-        printf("rpm: %d", sysinfo.rpm);
+        printf("%d (rpm)", sysinfo.rpm);
         comma = 1;
     }
     if (sysinfo.snap != 0) {
         if (comma == 1) printf(", ");
-        printf("snap: %d", sysinfo.snap);
+        printf("%d (snap)", sysinfo.snap);
         comma = 1;
     }
     if (sysinfo.xbps != 0) {
         if (comma == 1) printf(", ");
-        printf("xbps: %d", sysinfo.xbps);
+        printf("%d (xbps)", sysinfo.xbps);
         comma = 1;
     }
 
     if (sysinfo.yay != 0) {
         if (comma == 1) printf(", ");
-        printf("yay: %d", sysinfo.yay);
+        printf("%d (yay", sysinfo.yay);
         comma = 1;
     }
     if (sysinfo.yum != 0) {
         if (comma == 1) printf(", ");
-        printf("yum: %d", sysinfo.yum);
+        printf("%d (yum", sysinfo.yum);
         comma=1;
     }
     if (sysinfo.zypper != 0) {
         if (comma == 1) printf(", ");
-        printf("zypper: %d", sysinfo.zypper);
+        printf("%d (zypper)", sysinfo.zypper);
         comma = 1;
     }
 
@@ -282,8 +287,6 @@ int main() {
 
     // Do not change these
     // user, os, kernel, model, cpu, ram, shell, pkgs, uptime, palette colours
-
-    // Alpine
     if (strstr(sysinfo.os, "Alpine") != NULL) {
         printf("%s                      %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s        /\\            OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
@@ -297,7 +300,6 @@ int main() {
         printf("%s                      UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s                      %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Arch") != NULL) {
-    // Arch - OK
         printf("%s                  %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s        /\\        OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       /  \\       KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -310,7 +312,6 @@ int main() {
         printf("%s                  UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s                  %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Bang") != NULL) {
-    // ArchBang
         printf("%s                    %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s        /\\          OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       / _\\         KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -322,8 +323,19 @@ int main() {
         printpkgs();
         printf("%s                    UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s                    %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
+    } else if (strstr(sysinfo.os, "ArchLabs") != NULL) {
+        printf("%s                    %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
+        printf("%s        /\\          OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
+        printf("%s       /  \\         KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
+        printf("%s      / /\\ \\        MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
+        printf("%s     / //\\\\ \\       CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s    / //  \\\\ \\      RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
+        printf("%s   / _\\\\  //_ \\     SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
+        printf("%s  /.\\    /   /.\\    PKGS%s   ", bold, reset);
+        printpkgs();
+        printf("%s                    UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
+        printf("%s                    %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Arco") != NULL) {
-    // Arco
         printf("%s                  %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s        /\\        OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       /  \\       KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -336,7 +348,6 @@ int main() {
         printf("%s                  UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s                  %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Artix") != NULL) {
-    // Artix Linux
         printf("%s                    %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s        /\\          OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       /  \\         KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -349,7 +360,6 @@ int main() {
         printf("%s                    UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s                    %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Cent") != NULL) {
-    // CentOS
         printf("%s               %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s   ____^____   OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s   |\\  |  /|   KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -362,7 +372,6 @@ int main() {
         printf("%s               UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s               %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Debian") != NULL) {
-    // Debian - OK
         printf("%s                %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s                OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s     ,---._     KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -375,7 +384,6 @@ int main() {
         printf("%s                UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s                %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Devuan") != NULL) {
-    // Devuan - OK
         printf("%s                   %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s  -.,              OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s     \\`'-.,        KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -388,7 +396,6 @@ int main() {
         printf("%s                   UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s                   %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Elementary") != NULL) {
-    // Elementary OS - OK
         printf("%s               %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s               OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s    _______    KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -401,7 +408,6 @@ int main() {
         printf("%s               UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s               %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Fedora") != NULL) {
-    // Fedora - OK
         printf("%s                  %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s        _____     OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       /   __)\\   KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -414,7 +420,6 @@ int main() {
         printf("%s   \\(_____/       UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s                  %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Gentoo") != NULL) {
-    // Gentoo - OK
         printf("%s                  %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s    .-----.       OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s  .\\`    _  \\`.   KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -427,7 +432,6 @@ int main() {
         printf("%s                  UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s                  %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "GNew") != NULL) {
-    // GNewSense
         printf("%s                      %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s                      OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s     ________         KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -440,7 +444,6 @@ int main() {
         printf("%s                      UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s                      %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Guix") != NULL) {
-    // GNU Guix
         printf("%s                      %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s  |.__          __.|  OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s  |__ \\        / __|  KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -453,7 +456,6 @@ int main() {
         printf("%s                      UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s                      %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Hyperbola") != NULL) {
-    // Hyperbola GNU/Linux-Libre
         printf("%s                  %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s      |\\`__.\\`/   OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s      \\____/      KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
@@ -549,6 +551,18 @@ int main() {
         printpkgs();
         printf("%s                  UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
         printf("%s                  %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
+    } else if (strstr(sysinfo.os, "Wrt") != NULL) {
+        printf("%s                     %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
+        printf("%s                     OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
+        printf("%s     _____           KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
+        printf("%s  .-- ___ --.        MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
+        printf("%s   .-- _ --.         CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s    .-- --.          RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
+        printf("%s       0             SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
+        printf("%s                     PKGS%s   ", bold, reset);
+        printpkgs();
+        printf("%s                     UPTIME%s %dd, %dh, %dm%s\n", bold, reset, sysinfo.day, sysinfo.hour, sysinfo.min, reset);
+        printf("%s                     %s██%s██%s██%s██%s██%s██%s██%s██%s\n\n", bold, black, red, green, yellow, blue, magenta, cyan, white, reset);
     } else if (strstr(sysinfo.os, "Parabola") != NULL) {
         printf("%s                     %s%s@%s%s%s\n", bold, sysinfo.username, reset, bold, sysinfo.hostname, reset);
         printf("%s                     OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
