@@ -1,4 +1,5 @@
 # Compile cfetch
+.PHONY: compile
 compile:
 	@echo "Compiling cfetch..."
 	gcc cfetch.c -o cfetch -Wall -Wextra
@@ -7,6 +8,7 @@ compile:
 
 # Install cfetch.
 # This will copy cfetch to /usr/bin directory.
+.PHONY: install
 install:
 	@echo "Installing cfetch..."
 	cp -v cfetch /usr/bin
@@ -16,6 +18,7 @@ install:
 
 # Uninstall cfetch.
 # This will delete cfetch from the /usr/bin/ directory.
+.PHONY: uninstall
 uninstall:
 	@echo "Uninstalling cfetch..."
 	rm -rf /usr/bin/cfetch
@@ -24,6 +27,7 @@ uninstall:
 
 
 # Clean cfetch binary.
+.PHONY: clean
 clean:
 	@echo "Cleaning..."
 	rm -rf cfetch
