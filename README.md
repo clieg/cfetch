@@ -45,4 +45,4 @@ Thanks to [cfetch contributors](https://github.com/clieg/cfetch/graphs/contribut
 [ufetch](https://gitlab.com/jschx/ufetch/): ASCII Distro logos
 
 ## Other Projects
-[coffeetch](coffeetch) - Shell implementation of cfetch
+[coffeetch](https://github.com/clieg/coffeetch) - Shell implementation of cfetch
