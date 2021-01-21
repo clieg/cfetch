@@ -200,12 +200,12 @@ void printpkgs(){
 
     if (sysinfo.yay != 0) {
         if (comma == 1) printf(", ");
-        printf("%d (yay", sysinfo.yay);
+        printf("%d (yay)", sysinfo.yay);
         comma = 1;
     }
     if (sysinfo.yum != 0) {
         if (comma == 1) printf(", ");
-        printf("%d (yum", sysinfo.yum);
+        printf("%d (yum)", sysinfo.yum);
         comma=1;
     }
     if (sysinfo.zypper != 0) {
