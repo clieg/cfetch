@@ -29,7 +29,7 @@
 // System information variables
 struct sysinfo {
     char username[25], hostname[65], os[50], distro[50], kernel[50], modelname[50], modelversion[50], cpu[50], shell[8];
-    int ramused, ramtotal;
+    int ramused, ramtotal, core;
     int apk, apt, dnf, emerge, flatpak, kiss, nix, opkg, pacman, rpm, snap, xbps, yay, yum, zypper;
     int day, hour, min, sec;
 } sysinfo;
@@ -222,8 +222,11 @@ void printpkgs(){
 // sed -r 's/Model name:\\s{1,}// -> This will remove the 'Model name:', only the CPU will be printed.
 void getcpu() {
     FILE *cpu = popen("grep -i 'model name' /proc/cpuinfo | head -1 | cut -f3- -d' '", "r");
+    FILE *core = popen("nproc", "r");
     fscanf(cpu, "%[^\n]", sysinfo.cpu);
+    fscanf(core, "%d", &sysinfo.core);
     fclose(cpu);
+    fclose(core);
 }
 
 // Gets the RAM information
@@ -292,7 +295,7 @@ int main() {
         printf("%s        /\\            OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       /  \\           KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s      / /\\ \\  /\\      MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s     / /  \\ \\/  \\     CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s     / /  \\ \\/  \\     CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s    / /    \\ \\/\\ \\    RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   / / /|   \\ \\ \\ \\   SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  /_/ /_|    \\_\\ \\_\\  PKGS%s   ", bold, reset);
@@ -304,7 +307,7 @@ int main() {
         printf("%s        /\\        OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       /  \\       KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s      /\\   \\      MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s     /  __  \\     CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s     /  __  \\     CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s    /  (  )  \\    RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   / __|  |__ \\   SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  /.\\`      \\`.\\  PKGS%s   ", bold, reset);
@@ -316,7 +319,7 @@ int main() {
         printf("%s        /\\          OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       / _\\         KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s      /  \\ /        MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s     /   // \\       CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s     /   // \\       CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s    /   //   \\      RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   / ___()___ \\     SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  /.\\`        \\`.\\  PKGS%s   ", bold, reset);
@@ -328,7 +331,7 @@ int main() {
         printf("%s        /\\          OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       /  \\         KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s      / /\\ \\        MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s     / //\\\\ \\       CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s     / //\\\\ \\       CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s    / //  \\\\ \\      RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   / _\\\\  //_ \\     SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  /.\\    /   /.\\    PKGS%s   ", bold, reset);
@@ -340,7 +343,7 @@ int main() {
         printf("%s        /\\        OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       /  \\       KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s      / /\\ \\      MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s     / /  \\ \\     CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s     / /  \\ \\     CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s    / /    \\ \\    RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   / / -----\\ \\   SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  /_/  ````-.\\_\\  PKGS%s   ", bold, reset);
@@ -352,7 +355,7 @@ int main() {
         printf("%s        /\\          OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       /  \\         KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s      /\\`'.,\\       MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s     /     ',       CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s     /     ',       CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s    /      ,\\`\\     RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   /   ,.'\\`.  \\    SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  /.,'\\`     \\`'.\\  PKGS%s   ", bold, reset);
@@ -364,7 +367,7 @@ int main() {
         printf("%s   ____^____   OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s   |\\  |  /|   KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s   | \\ | / |   MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s  <---- ---->  CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s  <---- ---->  CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s   | / | \\ |   RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   |/__|__\\|   SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s       v       PKGS%s   ", bold, reset);
@@ -376,7 +379,7 @@ int main() {
         printf("%s                OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s     ,---._     KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s   /\\`  __ \\\\   MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s  |   /    |    CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s  |   /    |    CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s  |   \\`.__.\\`  RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   \\            SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s    \\`-,_       PKGS%s   ", bold, reset);
@@ -388,7 +391,7 @@ int main() {
         printf("%s  -.,              OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s     \\`'-.,        KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s          \\`':.    MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s             ::    CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s             ::    CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s        __--\\`:\\`  RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   _,--\\` _.-\\`    SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  :_,--\\`\\`        PKGS%s   ", bold, reset);
@@ -400,7 +403,7 @@ int main() {
         printf("%s               OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s    _______    KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s   /  ___  \\   MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s  /  |  /  /\\  CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s  /  |  /  /\\  CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s  |__\\ /  / |  RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s  \\   /__/  /  SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s   \\_______/   PKGS%s   ", bold, reset);
@@ -412,7 +415,7 @@ int main() {
         printf("%s        _____     OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       /   __)\\   KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s       |  /  \\ \\  MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s    ___|  |__/ /  CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s    ___|  |__/ /  CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s   / (_    _)_/   RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s  / /  |  |       SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  \\ \\__/  |       PKGS%s   ", bold, reset);
@@ -424,7 +427,7 @@ int main() {
         printf("%s    .-----.       OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s  .\\`    _  \\`.   KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s  \\`.   ()   \\`.  MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s    \\`.        /  CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s    \\`.        /  CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s   .\\`       .\\`  RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s  /       .\\`     SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  \\____.-\\`       PKGS%s   ", bold, reset);
@@ -436,7 +439,7 @@ int main() {
         printf("%s                      OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s     ________         KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s   .\\`__.---.__\\`.    MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s  / /  |  *|  \\ \\     CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s  / /  |  *|  \\ \\     CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s  | |  \\___/  | |     RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s  \\ \\         / /     SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s   \\`.\\`       \\`.\\`  PKGS%s   ", bold, reset);
@@ -448,7 +451,7 @@ int main() {
         printf("%s  |.__          __.|  OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s  |__ \\        / __|  KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s     \\ \\      / /     MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s      \\ \\    / /      CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s      \\ \\    / /      CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s       \\ \\  / /       RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s        \\ \\/ /        SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s         \\__/         PKGS%s   ", bold, reset);
@@ -460,7 +463,7 @@ int main() {
         printf("%s      |\\`__.\\`/   OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s      \\____/      KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s      .--.        MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s     /    \\       CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s     /    \\       CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s    /  ___ \\      RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   / .\\`   \\`.\\   SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  /.\\`      \\`.\\  PKGS%s   ", bold, reset);
@@ -472,7 +475,7 @@ int main() {
         printf("%s                 OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s   ,-''-,        KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s  : .''. :       MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s  : ',,' :       CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s  : ',,' :       CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s   '-____:__     RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s         :  \\`.  SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s         \\`._.'  PKGS%s   ", bold, reset);
@@ -484,7 +487,7 @@ int main() {
         printf("%s     /\\   OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s    /  \\  KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s   / / /  MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s  > / /   CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s  > / /   CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s  \\ \\ \\   RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   \\_\\_\\  SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s      \\   PKGS%s   ", bold, reset);
@@ -496,7 +499,7 @@ int main() {
         printf("%s   _____________   OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s  |_            \\  KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s    |  |  ___   |  MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s    |  | | | |  |  CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s    |  | | | |  |  CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s    |  | | | |  |  RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s    |   \\____/  |  SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s    \\__________/   PKGS%s   ", bold, reset);
@@ -508,7 +511,7 @@ int main() {
         printf("%s     *      OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s      *     KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s     **     MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s   /\\__/\\   CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s   /\\__/\\   CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s  /      \\  RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s  \\      /  SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s   \\____/   PKGS%s   ", bold, reset);
@@ -520,7 +523,7 @@ int main() {
         printf("%s  ||||||||| ||||  OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s  ||||||||| ||||  KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s  ||||      ||||  MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s  |||| |||| ||||  CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s  |||| |||| ||||  CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s  |||| |||| ||||  RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s  |||| |||| ||||  SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  |||| |||| ||||  PKGS%s   ", bold, reset);
@@ -532,7 +535,7 @@ int main() {
         printf("%s      \\\\  /     OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s       \\\\/      KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s        \\\\      MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s     /\\/ \\\\     CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s     /\\/ \\\\     CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s    /  \\  /\\    RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   /    \\/  \\   SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  /__________\\  PKGS%s   ", bold, reset);
@@ -544,7 +547,7 @@ int main() {
         printf("%s    \\   \\ //      OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s   ==\\___\\/ //    KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s     //    \\//    MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s  ==//      //==  CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s  ==//      //==  CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s   //\\____//      RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s  // /\\   \\==     SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s    // \\   \\      PKGS%s   ", bold, reset);
@@ -556,7 +559,7 @@ int main() {
         printf("%s                     OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s     _____           KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s  .-- ___ --.        MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s   .-- _ --.         CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s   .-- _ --.         CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s    .-- --.          RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s       0             SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s                     PKGS%s   ", bold, reset);
@@ -568,7 +571,7 @@ int main() {
         printf("%s                     OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s    __ __ __  _      KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s  .\\`_//_//_/ / \\`.  MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s            /  .\\`   CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s            /  .\\`   CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s           / .\\`     RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s          /.\\`       SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s         /\\`         PKGS%s   ", bold, reset);
@@ -580,7 +583,7 @@ int main() {
         printf("%s  ______             OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s  \\   _ \\        __  KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s   \\ \\ \\ \\      / /  MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s    \\ \\_\\ \\    / /   CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s    \\ \\_\\ \\    / /   CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s     \\  ___\\  /_/    RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s      \\ \\    _       SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s     __\\_\\__(_)_     PKGS%s   ", bold, reset);
@@ -592,7 +595,7 @@ int main() {
         printf("%s                   OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s   _____________   KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s  |  _________  |  MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s  | |         | |  CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s  | |         | |  CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s  | |         | |  RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s  | |_________| |  SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  |_____________|  PKGS%s   ", bold, reset);
@@ -604,7 +607,7 @@ int main() {
         printf("%s              OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s    __  __    KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s   (_\\)(/_)   MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s   (_(__)_)   CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s   (_(__)_)   CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s  (_(_)(_)_)  RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   (_(__)_)   SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s     (__)     PKGS%s   ", bold, reset);
@@ -616,7 +619,7 @@ int main() {
         printf("%s     ________    OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s    /  ______|   KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s    | |______    MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s    \\______  \\   CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s    \\______  \\   CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s     ______| |   RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s  | |________/   SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  |____________  PKGS%s   ", bold, reset);
@@ -628,7 +631,7 @@ int main() {
         printf("%s      _______    OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s  -___|   __ \\   KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s         / .\\ \\  MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s         \\__/ |  CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s         \\__/ |  CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s       _______|  RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s       \\_______  SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  --__________/  PKGS%s   ", bold, reset);
@@ -640,7 +643,7 @@ int main() {
         printf("%s                OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s           _    KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s       ---(_)   MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s   _/  ---  \\   CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s   _/  ---  \\   CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s  (_) |   |     RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s    \\  --- _/   SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s       ---(_)   PKGS%s   ", bold, reset);
@@ -652,7 +655,7 @@ int main() {
         printf("%s      _______      OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s      \\_____ \\`-   KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s   /\\   ___ \\`- \\  MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s  | |  /   \\  | |  CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s  | |  /   \\  | |  CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s  | |  \\___/  | |  RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s   \\ \\`-_____  \\/  SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s    \\`-______\\     PKGS%s   ", bold, reset);
@@ -664,7 +667,7 @@ int main() {
         printf("%s  |     | |    |  OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s  |     | |    |  KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s  |     | |    |  MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s  |     | |____|  CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s  |     | |____|  CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s  |     | _____   RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s  |     ||     |  SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  |_____||_____|  PKGS%s   ", bold, reset);
@@ -676,7 +679,7 @@ int main() {
         printf("%s      ___     OS%s     %s%s\n", bold, reset, sysinfo.os, reset);
         printf("%s     (.. |    KERNEL%s %s%s\n", bold, reset, sysinfo.kernel, reset);
         printf("%s     (<> |    MODEL%s  %s %s%s\n", bold, reset, sysinfo.modelname, sysinfo.modelversion, reset);
-        printf("%s    / __  \\   CPU%s    %s%s\n", bold, reset, sysinfo.cpu, reset);
+        printf("%s    / __  \\   CPU%s    %s @ %d%s\n", bold, reset, sysinfo.cpu, sysinfo.core, reset);
         printf("%s   ( /  \\ /|  RAM%s    %dM / %dM%s\n", bold, reset, sysinfo.ramused, sysinfo.ramtotal, reset);
         printf("%s  _/\\ __)/_)  SHELL%s  %s%s\n", bold, reset, sysinfo.shell, reset);
         printf("%s  \\|/-___\\|/  PKGS%s   ", bold, reset);
