@@ -1,3 +1,7 @@
+.PHONY: all
+all:
+	@echo "Run 'make compile' and 'make install' to install cfetch"
+
 # Compile cfetch
 .PHONY: compile
 compile:
