@@ -1,0 +1,696 @@
+#!/usr/bin/env bash
+#
+#
+# cfetch - A minimal system information tool for Linux-based operating systems.
+#
+# Copyright (c) 2021 Clint <https://github.com/clieg>
+# This programme is provided under the GPL-3.0 License.
+# See LICENSE for more details.
+
+
+
+
+
+
+# This will display cfetch's usage information.
+usage() {
+printf "Usage: cfetch --option
+
+cfetch is a simple system information tool for Linux. cfetch shows the OS'
+name and architecture, kernel release name, computer's modelname and version,
+CPU's core and name, number of packages installed, shell's name, total RAM size
+and total RAM used, and the sytem's uptime.
+
+CONFIGURATION:
+    sudo make install       To install cfetch
+    cfetch               To run cfetch
+    sudo make uninstall     To uninstall cfetch
+
+OPTIONS:
+    --help                  Display help information.
+    --version               Display cfetch version.
+
+SUPPORTED DISTROS:
+    Alpine Linux    ArchBang    ArchLabs    Arch Linux      ArchoLinux
+    Artix Linux     CentOS      Debian      Devuan          elementaryOS
+    Fedora          Gentoo      gNewSense   GNU Guix        Hyperbola
+    instantOS       KISS Linux  Linux Lite  Linux Mint      LMDE
+    Mageia          Manjaro     MX Linux    NixOS           openSUSE
+    OpenWrt         Parabola    Pop!_OS     PureOS          Raspbian
+    Slackware       Ubuntu      Void Linux  Voyager Live
+
+
+For bugs report, go to https://github.com/clieg/cfetch/issues
+
+Copyright (c) 2021 Clint <https://github.com/clieg>
+This programme is provided under the GPL-3.0 License. See LICENSE for more details.
+"
+}
+
+
+# Get the username and hostname using the 'whoami'and 'hostname' command.
+get_user() {
+    user="$(whoami)@$(hostname)"
+}
+
+
+# Get the distro name (currently, this only supports the distros that follows
+# LSB) and architecture using the 'lsb_release -ds' and 'uname -m'.
+get_os() {
+    if [ $(command  -v lsb_release) ]; then
+        distro="$(lsb_release -ds)"
+    else
+        distro="$(grep -i 'PRETTY_NAME=' /etc/*-release | cut -d '\"' -f2)"
+    fi
+}
+
+
+# Get the kernel release information using the 'uname -r' command. This will
+# get the kernel that the  distro is using.
+get_kernel() {
+    kernel="$(uname -mr)"
+}
+
+
+# Get the system's model name and product version by reading the
+# '/sys/devices/virtual/dmi/id/product_name' and
+# '/sys/devices/virtual/dmi/id/product_version'.
+get_model() {
+    model="$(< /sys/devices/virtual/dmi/id/product_name) "
+    model+="$(< /sys/devices/virtual/dmi/id/product_version)"
+}
+
+
+# Get the CPU's model name by using search the '/proc/cpuinfo' for 'model name'
+# and the number of cores in the CPU by using the 'nproc' commands.
+get_cpu() {
+    cpu="$(grep -i 'model name' /proc/cpuinfo | head -1 | cut -f3- -d' ')"
+    core="$(nproc)"
+    cpu+=" @ ${core}"
+}
+
+
+# Get the nme of the shell that is currently in use.
+# This supports bash, fish, ksh, tcsh, and zsh shells.
+get_shell() {
+    shell="$(basename $SHELL)"
+}
+
+
+# Get the available RAM and the total RAM by looking at the /proc/meminfo'.
+# Subtract the 'ramtotal' and 'ramused' to get the size of RAM in use.
+# By default this will display the RAM information in kilobytes, so 'ramused'
+# and 'ramtotal' to 1024 to translate it into mebibytes.
+get_ram() {
+    ramused="$(grep -i MemAvailable /proc/meminfo | awk '{print $2}')"
+    ramtotal="$(grep -i MemTotal /proc/meminfo | awk '{print $2}')"
+
+    # Subtract 'ramtotal' to 'ramused' to get the value of RAM that is used.
+    ramused=$((ramtotal-ramused))
+
+    # Divide 'ramused' and 'ramtotal' to 1024 to translate it into
+    # mebibytes (MiB).
+    ((ramused /= 1024))
+    ((ramtotal /= 1024))
+
+    ram="${ramused} MiB / ${ramtotal} MiB"
+}
+
+
+# Get the number of packages installed in the user's system. This will look for
+# the distro's package manager, if the package manager is found, then the number
+# of packages installed in the system will be displayed. To print the number of
+# packages installed, 'wc -l'.
+get_pkgs() {
+    # Detect apk packages installed.
+    if [ -x "$(command -v apk)" ]; then
+        pkgs="$(apk list --installed | wc -l)"
+        pkgs+="(apk) "
+    fi
+
+    # Detect apt packages installed.
+    if [ -x "$(command -v apt)" ]; then
+        pkgs="$(dpkg-query -f '${binary:Package}\n' -W | wc -l)"
+        pkgs+="(apt) "
+    fi
+
+    # Detect dnf packages installed.
+    if [ -x "$(command -v dnf)" ]; then
+        pkgs="$(dnf list installed | wc -l)"
+        pkgs+="(dnf) "
+    fi
+
+    # Detect emerge packages installed.
+    if [ -x "$(command -v emerge)" ]; then
+        pkgs="$(qlist -I | wc -l)"
+        pkgs+="(emerge) "
+    fi
+
+    # Detect kiss packages installed.
+    if [ -x "$(command -v kiss)" ]; then
+        pkgs="$(kiss list | wc -l)"
+        pkgs+="(kiss) "
+    fi
+
+    # Detect snap packages installed.
+    if [ -x "$(command -v nix)" ]; then
+        pkgs="$(nix-store -q --requisites /run/current-system/sw | wc -l)"
+        pkgs+="(nix) "
+    fi
+
+    # Detect opkg packages installed.
+    if [ -x "$(command -v opkg)" ]; then
+        pkgs="$(opkg list-installed  | wc -l)"
+        pkgs+="(opkg) "
+    fi
+
+    # Detect pacman packages installed.
+    if [ -x "$(command -v pacman)" ]; then
+        pkgs="$(pacman -Q | wc -l)"
+        pkgs+="(pacman) "
+    fi
+
+    # Detect rpm packages installed.
+    if [ -x "$(command -v rpm)" ]; then
+        pkgs="$(rpm -qa --last | wc -l)"
+        pkgs+="(rpm) "
+    fi
+
+    # Detect xbps packages installed.
+    if [ -x "$(command -v xbps)" ]; then
+        pkgs="$(xbps-query -l | wc -l)"
+        pkgs+="(xbps) "
+    fi
+
+    # Detect yay packages installed.
+    if [ -x "$(command -v yay)" ]; then
+        pkgs="$(yay -Q | wc -l)"
+        pkgs+="(yay) "
+    fi
+
+    # Detect yum packages installed.
+    if [ -x "$(command -v yum)" ]; then
+        pkgs="$(yum list installed | wc -l)"
+        pkgs+="(yum) "
+    fi
+
+    # Detect zypper packages installed.
+    if [ -x "$(command -v zypper)" ]; then
+        pkgs="$(zypper se | wc -l)"
+        pkgs+="(zypper) "
+    fi
+
+    # Detect flatpak packages installed.
+    if [ -x "$(command -v flatpak)" ]; then
+        pkgs+="$(flatpak list | wc -l)"
+        pkgs+="(flatpak) "
+    fi
+
+    # Detect snap packages installed.
+    if [ -x "$(command -v snap)" ]; then
+        pkgs+="$(snap list | wc -l)"
+        pkgs+="(snap) "
+    fi
+}
+
+
+# Get the system's uptime.
+# Retrieve data in seconds then convert that data
+# into days, hours, and minutes using simple math.
+get_uptime() {
+    IFS=. read -r sec _ < /proc/uptime
+
+    # Convert uptime from seconds into days, hours, and minutes.
+    day=$((sec / 60 / 60 / 24))
+    hour=$((sec / 60 / 60 % 24))
+    min=$((sec / 60 % 60))
+
+    # Append days, hours, and min if they're equal to zero.
+    # Print 'dys', 'hrs', and 'mins' if they're more than two.
+    if [ "${day}" == 0 ]; then uptime="${hour}h ${min}m"
+    elif [ "${hour}" == 0 ]; then uptime="${day}d ${min}m"
+    elif [ "${min}" == 0 ]; then uptime="${day}d ${hour}h"
+    else uptime="${day}d ${hour}h ${min}m"
+    fi
+}
+
+
+# Call all the functions.
+{
+    get_user
+    get_os
+    get_kernel
+    get_model
+    get_cpu
+    get_shell
+    get_pkgs
+    get_ram
+    get_uptime
+}
+
+
+# Define colours.
+{
+    r='\033[0m'
+    bold='\033[1m'
+    black='\033[30m'
+    red='\033[31m'
+    green='\033[32m'
+    yellow='\033[33m'
+    blue='\033[34m'
+    magenta='\033[35m'
+    cyan='\033[36m'
+    white='\033[37m'
+
+    bb="${bold}${yellow}"
+    bw="${bold}${wite}"
+}
+
+
+# Print system information. This will print the OS' name and architecture,
+# kernel release name, computer's modelname and version, CPU's core and name,
+# number of packages installed, shell's name, total RAM size and total RAM used,
+# and the sytem's uptime.
+fetch() {
+case "$distro" in
+    "Alpine"*) # Alpine
+        echo -e "${bb}                     $user${r}"
+        echo -e "${bb}        /\\           OS     ${r}$distro"
+        echo -e "${bb}       /  \\          KERNEL ${r}$kernel"
+        echo -e "${bb}      / /\\ \\  /\\     MODEL  ${r}$model"
+        echo -e "${bb}     / /  \\ \\/  \\    CPU    ${r}$cpu"
+        echo -e "${bb}    / /    \\ \\/\\ \\   RAM    ${r}$ram"
+        echo -e "${bb}   / / /|   \\ \\ \\ \\  SHELL  ${r}$shell"
+        echo -e "${bb}  /_/ /_|    \\_\\ \\_\\ PKGS   ${r}$pkgs"
+        echo -e "${bb}                     UPTIME ${r}$uptime
+        "
+    ;;
+    "ArchBang"*) # ArchBang
+        echo -e "${bb}                   $user${r}"
+        echo -e "${bb}        /\\         OS     ${r}$distro"
+        echo -e "${bb}       / _\\        KERNEL ${r}$kernel"
+        echo -e "${bb}      /  \\ /       MODEL  ${r}$model"
+        echo -e "${bb}     /   // \\      CPU    ${r}$cpu"
+        echo -e "${bb}    /   //   \\     RAM    ${r}$ram"
+        echo -e "${bb}   / ___()___ \\    SHELL  ${r}$shell"
+        echo -e "${bb}  /.\\\`        \\\`.\\ PKGS   ${r}$pkgs"
+        echo -e "${bb}                   UPTIME ${r}$uptime
+        "
+    ;;
+    "ArchLabs"*) # ArchLabs
+        echo -e "${bb}                 $user${r}"
+        echo -e "${bb}        /\\       OS     ${r}$distro"
+        echo -e "${bb}       /  \\      KERNEL ${r}$kernel"
+        echo -e "${bb}      / /\\ \\     MODEL  ${r}$model"
+        echo -e "${bb}     / //\\\\  \\    CPU    ${r}$cpu"
+        echo -e "${bb}    / //  \\\\  \\   RAM    ${r}$ram"
+        echo -e "${bb}   / _\\\\  //_  \\  SHELL  ${r}$shell"
+        echo -e "${bb}  /.\\    /   /.\\ PKGS   ${r}$pkgs"
+        echo -e "${bb}                 UPTIME ${r}$uptime
+        "
+    ;;
+    "Arch"*) # Arch
+        echo -e "${bb}                 $user${r}"
+        echo -e "${bb}        /\\       OS${r} $distro"
+        echo -e "${bb}       /  \\      KERNEL${r} $kernel"
+        echo -e "${bb}      /\\   \\     MODEL  ${r}$model"
+        echo -e "${bb}     /  __  \\    CPU    ${r}$cpu"
+        echo -e "${bb}    /  (  )  \\   RAM    ${r}$ram"
+        echo -e "${bb}   / __|  |__ \\  SHELL  ${r}$shell"
+        echo -e "${bb}  /.\\\`      \\\`.\\ PKGS   ${r}$pkgs"
+        echo -e "${bb}                 UPTIME ${r}$uptime
+        "
+    ;;
+    "Arco"*) # Arco
+        echo -e "${bb}                 $user${r}"
+        echo -e "${bb}        /\\       OS     ${r}$distro"
+        echo -e "${bb}       /  \\      KERNEL ${r}$kernel"
+        echo -e "${bb}      / /\\ \\     MODEL  ${r}$model"
+        echo -e "${bb}     / /  \\ \\    CPU    ${r}$cpu"
+        echo -e "${bb}    / /    \\ \\   RAM    ${r}$ram"
+        echo -e "${bb}   / / -----\\ \\  SHELL  ${r}$shell"
+        echo -e "${bb}  /_/  \`\`\`\`-.\\_\\ PKGS   ${r}$pkgs"
+        echo -e "${bb}                 UPTIME ${r}$uptime
+        "
+    ;;
+    "Artix"*) # Artix
+        echo -e "${bb}                   $user${r}"
+        echo -e "${bb}        /\\         OS     ${r}$distro"
+        echo -e "${bb}       /  \\        KERNEL ${r}$kernel"
+        echo -e "${bb}      /\\\`'.,\\      MODEL  ${r}$model"
+        echo -e "${bb}     /     ',      CPU    ${r}$cpu"
+        echo -e "${bb}    /      ,\\\`\\    RAM    ${r}$ram"
+        echo -e "${bb}   /   ,.'\\\`.  \\   SHELL  ${r}$shell"
+        echo -e "${bb}  /.,'\\\`     \\\`'.\\ PKGS   ${r}$pkgs"
+        echo -e "${bb}                   UPTIME ${r}$uptime
+        "
+    ;;
+    "Cent"*) # Cent
+        echo -e "${bb}              $user${r}"
+        echo -e "${bb}   ____^____  OS     ${r}$distro"
+        echo -e "${bb}   |\\  |  /|  KERNEL ${r}$kernel"
+        echo -e "${bb}   | \\ | / |  MODEL  ${r}$model"
+        echo -e "${bb}  <---- ----> CPU    ${r}$cpu"
+        echo -e "${bb}   | / | \\ |  RAM    ${r}$ram"
+        echo -e "${bb}   |/__|__\\|  SHELL  ${r}$shell"
+        echo -e "${bb}       v      PKGS   ${r}$pkgs"
+        echo -e "${bb}              UPTIME ${r}$uptime
+        "
+    ;;
+    "Debian"*) # Debian
+        echo -e "${bb}               $user${r}"
+        echo -e "${bb}     ,---._    OS     ${r}$distro"
+        echo -e "${bb}   /\\\`  __ \\\\   KERNEL ${r}$kernel"
+        echo -e "${bb}  |   /    |   MODEL  ${r}$model"
+        echo -e "${bb}  |   \\\`.__.\\\` CPU    ${r}$cpu"
+        echo -e "${bb}   \\           RAM    ${r}$ram"
+        echo -e "${bb}    \\\`-,_      SHELL  ${r}$shell"
+        echo -e "${bb}               PKGS   ${r}$pkgs"
+        echo -e "${bb}               UPTIME ${r}$uptime
+        "
+    ;;
+    "Devuan"*) # Devuan
+        echo -e "${bb}                  $user${r}"
+        echo -e "${bb}  -.,             OS     ${r}$distro"
+        echo -e "${bb}     \\\`'-.,       KERNEL ${r}$kernel"
+        echo -e "${bb}          \\\`':.   MODEL  ${r}$model"
+        echo -e "${bb}             ::   CPU    ${r}$cpu"
+        echo -e "${bb}        __--\\\`:\\\` RAM    ${r}$ram"
+        echo -e "${bb}   _,--\\\` _.-\\\`   SHELL  ${r}$shell"
+        echo -e "${bb}  :_,--\\\`\\\`       PKGS   ${r}$pkgs"
+        echo -e "${bb}                  UPTIME ${r}$uptime
+        "
+    ;;
+    "elementary"*) # elementary
+        echo -e "${bb}              $user${r}"
+        echo -e "${bb}    _______   OS     ${r}$distro"
+        echo -e "${bb}   /  ___  \\  KERNEL ${r}$kernel"
+        echo -e "${bb}  /  |  /  /\\ MODEL  ${r}$model"
+        echo -e "${bb}  |__\\ /  / | CPU    ${r}$cpu"
+        echo -e "${bb}  \\   /__/  / RAM    ${r}$ram"
+        echo -e "${bb}   \\_______/  SHELL  ${r}$shell"
+        echo -e "${bb}              PKGS   ${r}$pkgs"
+        echo -e "${bb}              UPTIME ${r}$uptime
+        "
+    ;;
+    "Fedora"*) # Fedora
+        echo -e "${bb}                  $user${r}"
+        echo -e "${bb}        _____     OS     ${r}$distro"
+        echo -e "${bb}       /   __)\\   KERNEL ${r}$kernel"
+        echo -e "${bb}       |  /  \\ \\  MODEL  ${r}$model"
+        echo -e "${bb}    ___|  |__/ /  CPU    ${r}$cpu"
+        echo -e "${bb}   / (_    _)_/   RAM    ${r}$ram"
+        echo -e "${bb}  / /  |  |       SHELL  ${r}$shell"
+        echo -e "${bb}  \\ \\__/  |       PKGS   ${r}$pkgs"
+        echo -e "${bb}   \\(_____/       UPTIME ${r}$uptime
+        "
+    ;;
+    "Gentoo"*) # Gentoo
+        echo -e "${bb}                 $user${r}"
+        echo -e "${bb}    .-----.      OS     ${r}$distro"
+        echo -e "${bb}  .\\\`    _  \\\`.  KERNEL ${r}$kernel"
+        echo -e "${bb}  \\\`.   ()   \\\`. MODEL  ${r}$model"
+        echo -e "${bb}    \\\`.        / CPU    ${r}$cpu"
+        echo -e "${bb}   .\\\`       .\\\` RAM    ${r}$ram"
+        echo -e "${bb}  /       .\\\`    SHELL  ${r}$shell"
+        echo -e "${bb}  \\____.-\\\`      PKGS   ${r}$pkgs"
+        echo -e "${bb}                 UPTIME ${r}$uptime
+        "
+    ;;
+    "gNewSense"*) # gNewSense
+        echo -e "${bb}                     $user${r}"
+        echo -e "${bb}     ________        OS     ${r}$distro"
+        echo -e "${bb}   .\\\`__.---.__\\\`.   KERNEL ${r}$kernel"
+        echo -e "${bb}  / /  |  *|  \\ \\    MODEL  ${r}$model"
+        echo -e "${bb}  | |  \\___/  | |    CPU    ${r}$cpu"
+        echo -e "${bb}  \\ \\         / /    RAM    ${r}$ram"
+        echo -e "${bb}   \\\`.\\\`       \\\`.\\\` SHELL  ${r}$shell"
+        echo -e "${bb}                     PKGS   ${r}$pkgs"
+        echo -e "${bb}                     UPTIME ${r}$uptime
+        "
+    ;;
+    "Guix"*) # Guix
+        echo -e "${bb}                     $user${r}"
+        echo -e "${bb}  |.__          __.| OS     ${r}$distro"
+        echo -e "${bb}  |__ \\        / __| KERNEL ${r}$kernel"
+        echo -e "${bb}     \\ \\      / /    MODEL  ${r}$model"
+        echo -e "${bb}      \\ \\    / /     CPU    ${r}$cpu"
+        echo -e "${bb}       \\ \\  / /      RAM    ${r}$ram"
+        echo -e "${bb}        \\ \\/ /       SHELL  ${r}$shell"
+        echo -e "${bb}         \\__/        PKGS   ${r}$pkgs"
+        echo -e "${bb}                     UPTIME ${r}$uptime
+        "
+    ;;
+    "Hyperbola"*) # Hyperbola
+        echo -e "${bb}                 $user${r}"
+        echo -e "${bb}      |\\\`__.\\\`/  OS     ${r}$distro"
+        echo -e "${bb}      \\____/     KERNEL ${r}$kernel"
+        echo -e "${bb}      .--.       MODEL  ${r}$model"
+        echo -e "${bb}     /    \\      CPU    ${r}$cpu"
+        echo -e "${bb}    /  ___ \\     RAM    ${r}$ram"
+        echo -e "${bb}   / .\\\`   \\\`.\\  SHELL  ${r}$shell"
+        echo -e "${bb}  /.\\\`      \\\`.\\ PKGS   ${r}$pkgs"
+        echo -e "${bb}                 UPTIME ${r}$uptime
+        "
+    ;;
+    "instant"*) # instant
+        echo -e "${bb}                $user${r}"
+        echo -e "${bb}   ,-''-,       OS     ${r}$distro"
+        echo -e "${bb}  : .''. :      KERNEL ${r}$kernel"
+        echo -e "${bb}  : ',,' :      MODEL  ${r}$model"
+        echo -e "${bb}   '-____:__    CPU    ${r}$cpu"
+        echo -e "${bb}         :  \\\`. RAM    ${r}$ram"
+        echo -e "${bb}         \\\`._.' SHELL  ${r}$shell"
+        echo -e "${bb}                PKGS   ${r}$pkgs"
+        echo -e "${bb}                UPTIME ${r}$uptime
+        "
+    ;;
+    "Lite"*) # Lite
+        echo -e "${bb}         $user${r}"
+        echo -e "${bb}     /\\  OS     ${r}$distro"
+        echo -e "${bb}    /  \\ KERNEL ${r}$kernel"
+        echo -e "${bb}   / / / MODEL  ${r}$model"
+        echo -e "${bb}  > / /  CPU    ${r}$cpu"
+        echo -e "${bb}  \\ \\ \\  RAM    ${r}$ram"
+        echo -e "${bb}   \\_\\_\\ SHELL  ${r}$shell"
+        echo -e "${bb}      \\  PKGS   ${r}$pkgs"
+        echo -e "${bb}         UPTIME ${r}$uptime
+        "
+    ;;
+    "Mint"* | "LMDE"*) # Mint & LMDE
+        echo -e "${bb}                  $user${r}"
+        echo -e "${bb}   _____________  OS     ${r}$distro"
+        echo -e "${bb}  |_            \\ KERNEL ${r}$kernel"
+        echo -e "${bb}    |  |  ___   | MODEL  ${r}$model"
+        echo -e "${bb}    |  | | | |  | CPU    ${r}$cpu"
+        echo -e "${bb}    |  | | | |  | RAM    ${r}$ram"
+        echo -e "${bb}    |   \\____/  | SHELL  ${r}$shell"
+        echo -e "${bb}    \\__________/  PKGS   ${r}$pkgs"
+        echo -e "${bb}                  UPTIME ${r}$uptime
+        "
+    ;;
+    "Mageia"*) # Mageia
+        echo -e "${bb}           $user${r}"
+        echo -e "${bb}     *     OS     ${r}$distro"
+        echo -e "${bb}      *    KERNEL ${r}$kernel"
+        echo -e "${bb}     **    MODEL  ${r}$model"
+        echo -e "${bb}   /\\__/\\  CPU    ${r}$cpu"
+        echo -e "${bb}  /      \\ RAM    ${r}$ram"
+        echo -e "${bb}  \\      / SHELL  ${r}$shell"
+        echo -e "${bb}   \\____/  PKGS   ${r}$pkgs"
+        echo -e "${bb}           UPTIME ${r}$uptime
+        "
+    ;;
+    "Manjaro"*) # Manjaro
+        echo -e "${bb}                 $user${r}"
+        echo -e "${bb}  ||||||||| |||| OS     ${r}$distro"
+        echo -e "${bb}  ||||||||| |||| KERNEL ${r}$kernel"
+        echo -e "${bb}  ||||      |||| MODEL  ${r}$model"
+        echo -e "${bb}  |||| |||| |||| CPU    ${r}$cpu"
+        echo -e "${bb}  |||| |||| |||| RAM    ${r}$ram"
+        echo -e "${bb}  |||| |||| |||| SHELL  ${r}$shell"
+        echo -e "${bb}  |||| |||| |||| PKGS   ${r}$pkgs"
+        echo -e "${bb}                 UPTIME ${r}$uptime
+        "
+    ;;
+    "MX"*) # MX
+        echo -e "${bb}               $user${r}"
+        echo -e "${bb}      \\\\  /     OS     ${r}$distro"
+        echo -e "${bb}       \\\\/      KERNEL ${r}$kernel"
+        echo -e "${bb}        \\\\      MODEL  ${r}$model"
+        echo -e "${bb}     /\\/ \\\\     CPU    ${r}$cpu"
+        echo -e "${bb}    /  \\  /\\   RAM    ${r}$ram"
+        echo -e "${bb}   /    \\/  \\  SHELL  ${r}$shell"
+        echo -e "${bb}  /__________\\ PKGS   ${r}$pkgs"
+        echo -e "${bb}               UPTIME ${r}$uptime
+        "
+    ;;
+    "Nix"*) # Nix
+        echo -e "${bb}                 $user${r}"
+        echo -e "${bb}    \\   \\ //     OS     ${r}$distro"
+        echo -e "${bb}   ==\\___\\/ //   KERNEL ${r}$kernel"
+        echo -e "${bb}     //    \\//   MODEL  ${r}$model"
+        echo -e "${bb}  ==//      //== CPU    ${r}$cpu"
+        echo -e "${bb}   //\\____//     RAM    ${r}$ram"
+        echo -e "${bb}  // /\\   \\==    SHELL  ${r}$shell"
+        echo -e "${bb}    // \\   \\     PKGS   ${r}$pkgs"
+        echo -e "${bb}                 UPTIME ${r}$uptime
+        "
+    ;;
+    "Wrt"*) # OpenWrt
+        echo -e "${bb}               OS     ${r}$distro"
+        echo -e "${bb}    _______    KERNEL ${r}$kernel"
+        echo -e "${bb} .-- _____ --. MODEL  ${r}$model"
+        echo -e "${bb}  .-- ___ --.  CPU    ${r}$cpu"
+        echo -e "${bb}   .-- _ --.   RAM    ${r}$ram"
+        echo -e "${bb}    .-- --.    SHELL  ${r}$shell"
+        echo -e "${bb}       0       PKGS   ${r}$pkgs"
+        echo -e "${bb}               UPTIME ${r}$uptime
+        "
+    ;;
+    "Parabola"*) # Parabola
+        echo -e "${bb}                    $user${r}"
+        echo -e "${bb}    __ __ __  _     OS     ${r}$distro"
+        echo -e "${bb}  .\\\`_//_//_/ / \\\`. KERNEL ${r}$kernel"
+        echo -e "${bb}            /  .\\\`  MODEL  ${r}$model"
+        echo -e "${bb}           / .\\\`    CPU    ${r}$cpu"
+        echo -e "${bb}          /.\\\`      RAM    ${r}$ram"
+        echo -e "${bb}         /\\\`        SHELL  ${r}$shell"
+        echo -e "${bb}                    PKGS   ${r}$pkgs"
+        echo -e "${bb}                    UPTIME ${r}$uptime
+        "
+    ;;
+    "Pop"*) # Pop
+        echo -e "${bb}                    $user${r}"
+        echo -e "${bb}  ______            OS     ${r}$distro"
+        echo -e "${bb}  \\   _ \\        __ KERNEL ${r}$kernel"
+        echo -e "${bb}   \\ \\ \\ \\      / / MODEL  ${r}$model"
+        echo -e "${bb}    \\ \\_\\ \\    / /  CPU    ${r}$cpu"
+        echo -e "${bb}     \\  ___\\  /_/   RAM    ${r}$ram"
+        echo -e "${bb}      \\ \\    _      SHELL  ${r}$shell"
+        echo -e "${bb}     __\\_\\__(_)_    PKGS   ${r}$pkgs"
+        echo -e "${bb}    (___________)   UPTIME ${r}$uptime
+        "
+    ;;
+    "Pure"*) # Pure
+        echo -e "${bb}                  $user${r}"
+        echo -e "${bb}   _____________  OS     ${r}$distro"
+        echo -e "${bb}  |  _________  | KERNEL ${r}$kernel"
+        echo -e "${bb}  | |         | | MODEL  ${r}$model"
+        echo -e "${bb}  | |         | | CPU    ${r}$cpu"
+        echo -e "${bb}  | |_________| | RAM    ${r}$ram"
+        echo -e "${bb}  |_____________| SHELL  ${r}$shell"
+        echo -e "${bb}                  PKGS   ${r}$pkgs"
+        echo -e "${bb}                  UPTIME ${r}$uptime
+        "
+    ;;
+    "Raspbian"*) # Raspbian
+        echo -e "${bb}             $user${r}"
+        echo -e "${bb}    __  __   OS     ${r}$distro"
+        echo -e "${bb}   (_\\)(/_)  KERNEL ${r}$kernel"
+        echo -e "${bb}   (_(__)_)  MODEL  ${r}$model"
+        echo -e "${bb}  (_(_)(_)_) CPU    ${r}$cpu"
+        echo -e "${bb}   (_(__)_)  RAM    ${r}$ram"
+        echo -e "${bb}     (__)    SHELL  ${r}$shell"
+        echo -e "${bb}             PKGS   ${r}$pkgs"
+        echo -e "${bb}             UPTIME ${r}$uptime
+        "
+    ;;
+    "Slackware"*) # Slackware
+        echo -e "${bb}                $user${r}"
+        echo -e "${bb}     ________   OS     ${r}$distro"
+        echo -e "${bb}    /  ______|  KERNEL ${r}$kernel"
+        echo -e "${bb}    | |______   MODEL  ${r}$model"
+        echo -e "${bb}    \\______  \\  CPU    ${r}$cpu"
+        echo -e "${bb}     ______| |  RAM    ${r}$ram"
+        echo -e "${bb}  | |________/  SHELL  ${r}$shell"
+        echo -e "${bb}  |____________ PKGS   ${r}$pkgs"
+        echo -e "${bb}                UPTIME ${r}$uptime
+        "
+    ;;
+    "SUSE"*) # SUSE
+        echo -e "${bb}                $user${r}"
+        echo -e "${bb}      _______   OS     ${r}$distro"
+        echo -e "${bb}  -___|   __ \\  KERNEL ${r}$kernel"
+        echo -e "${bb}         / .\\ \\ MODEL  ${r}$model"
+        echo -e "${bb}         \\__/ | CPU    ${r}$cpu"
+        echo -e "${bb}       _______| RAM    ${r}$ram"
+        echo -e "${bb}       \\_______ SHELL  ${r}$shell"
+        echo -e "${bb}  --__________/ PKGS   ${r}$pkgs"
+        echo -e "${bb}                UPTIME ${r}$uptime
+        "
+    ;;
+    "Ubuntu"*) # Ubuntu
+        echo -e "${bb}              $user${r}"
+        echo -e "${bb}           _  OS     ${r}$distro"
+        echo -e "${bb}       ---(_) KERNEL ${r}$kernel"
+        echo -e "${bb}   _/  ---  \\ MODEL  ${r}$model"
+        echo -e "${bb}  (_) |   |   CPU    ${r}$cpu"
+        echo -e "${bb}    \\  --- _/ RAM    ${r}$ram"
+        echo -e "${bb}       ---(_) SHELL  ${r}$shell"
+        echo -e "${bb}              PKGS   ${r}$pkgs"
+        echo -e "${bb}              UPTIME ${r}$uptime
+        "
+    ;;
+    "Void"*) # Void
+        echo -e "${bb}                  $user${r}"
+        echo -e "${bb}      _______     OS     ${r}$distro"
+        echo -e "${bb}      \\_____ \\\`-  KERNEL ${r}$kernel"
+        echo -e "${bb}   /\\   ___ \\\`- \\ MODEL  ${r}$model"
+        echo -e "${bb}  | |  /   \\  | | CPU    ${r}$cpu"
+        echo -e "${bb}  | |  \\___/  | | RAM    ${r}$ram"
+        echo -e "${bb}   \\ \\\`-_____  \\/ SHELL  ${r}$shell"
+        echo -e "${bb}    \\\`-______\\    PKGS   ${r}$pkgs"
+        echo -e "${bb}                  UPTIME ${r}$uptime
+        "
+    ;;
+    "Voyager"*) # Voyager
+        echo -e "${bb}                 $user${r}"
+        echo -e "${bb}   _____   ____  OS     ${r}$distro"
+        echo -e "${bb}  |     | |    | KERNEL ${r}$kernel"
+        echo -e "${bb}  |     | |    | MODEL  ${r}$model"
+        echo -e "${bb}  |     | |    | CPU    ${r}$cpu"
+        echo -e "${bb}  |     | |____| RAM    ${r}$ram"
+        echo -e "${bb}  |     | _____  SHELL  ${r}$shell"
+        echo -e "${bb}  |     ||     | PKGS   ${r}$pkgs"
+        echo -e "${bb}  |_____||_____| UPTIME ${r}$uptime
+        "
+    ;;
+    *) # Others
+        echo -e "${bb}             $user${r}"
+        echo -e "${bb}      ___    OS     ${r}$distro"
+        echo -e "${bb}     (.. |   KERNEL ${r}$kernel"
+        echo -e "${bb}     (<> |   MODEL  ${r}$model"
+        echo -e "${bb}    / __  \\  CPU    ${r}$cpu"
+        echo -e "${bb}   ( /  \\ /| RAM    ${r}$ram"
+        echo -e "${bb}  _/\\ __)/_) SHELL  ${r}$shell"
+        echo -e "${bb}  \\|/-___\\|/ PKGS   ${r}$pkgs"
+        echo -e "${bb}             UPTIME ${r}$uptime
+        "
+    ;;
+esac
+}
+
+
+main() {
+    # If there are arguments, the assigned cases will be executed.
+    # If the argument does not match on the cases, then system information
+    # will be displayed.
+    while [[ $# -gt 0 ]] && [[ "$1" == "--"* ]];
+    do
+        option="$1";
+        shift;
+        case "$option" in
+            "--version") printf "cfetch 0.1.2\n";;
+            "--help") usage;;
+            *) fetch;;
+        esac
+    done
+
+    # If there are no arguments, then the system information will be displayed.
+    if [[ "$option" != "--"* ]]; then
+        fetch
+    fi
+}
+
+main "$@"
