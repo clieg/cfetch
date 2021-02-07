@@ -5,8 +5,8 @@ all:
 .PHONY: install
 install:
 	@cp -v cfetch /usr/bin/cfetch
-	@chmod 755 $(DESTDIR)$(PREFIX)/bin/cfetch
+	@chmod 755 /usr/bin/cfetch
 
 .PHONY: uninstall
 uninstall:
-	@rm -rf -v $(DESTDIR)$(PREFIX)/bin/cfetch
+	@rm -rf -v /usr/bin/cfetch
