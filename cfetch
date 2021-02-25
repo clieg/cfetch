@@ -14,7 +14,7 @@
 
 usage() {
 # This will display cfetch's usage information.
-whiptail --title "cfetch" --msgbox "Usage: cfetch --option
+whiptail --title "cfetch" --scrolltext --msgbox "Usage: cfetch --option
 
 cfetch is a simple system information tool for Linux. cfetch shows the OS' name and architecture, kernel release name, computer's modelname and version, CPU's core and name, number of packages installed, shell's name, total RAM size and total RAM used, and the sytem's uptime.
 
@@ -32,7 +32,8 @@ For bugs report, go to https://github.com/kluntze/cfetch/issues
 Copyright (c) 2020 - 2021 Clint <https://github.com/kluntze>
 This programme is provided under the GPL-3.0 License. See LICENSE for more details.
 
-Thanks to cfetch contributors ♥ <https://github.com/kluntze/cfetch/graphs/contributors>" 28 100
+Thanks to cfetch contributors ♥ <https://github.com/kluntze/cfetch/graphs/contributors>
+Thanks to ufetch <https://gitlab.com/jschx/ufetch> and pfetch <https://github.com/dylanaraps/pfetch> for the ASCII logo." 28 100
 }
 
 
@@ -220,9 +221,9 @@ get_uptime() {
 
 fetch() {
     # Print system information. This will print the OS' name and architecture,
-    # kernel release name, computer's modelname and version, CPU's core and
-    # name, number of packages installed, shell's name, total RAM size and total
-    # RAM used, and the sytem's uptime.
+    # kernel release name, computer's modelname and version, CPU's core and name,
+    # number of packages installed, shell's name, total RAM size and total RAM
+    # used, and the sytem's uptime.
 
     case $distro in
         "Alpine"*) #Alpine
@@ -485,7 +486,7 @@ fetch() {
                         UPTIME $uptime
             " 18 100
         ;;
-        "Manjaro"*) # Manjaro
+        "\"Manjaro Linux\""*) # Manjaro
             whiptail --title "cfetch" --msgbox "
                               $user
               ||||||||| ||||  OS     $distro
@@ -676,9 +677,7 @@ fetch() {
 
 
 main() {
-    # If there is argument, the assigned cases will be executed. If the
-    # argument does not match on the cases, then system information will be
-    # displayed.
+    # If there is argument, the assigned cases will be executed.
     while [[ $# -gt 0 ]] && [[ $1 == "--"* ]];
     do
         option=$1;
@@ -691,6 +690,8 @@ main() {
         esac
     done
 
+    # If the argument does not match on the cases, then system information will
+    # be displayed.
     if [[ $option != "--"* ]]; then
         fetch
     fi
